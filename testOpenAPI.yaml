@@ -1,0 +1,398 @@
+openapi: "3.0.2"
+info:
+  title: The Smart Service Report REST Сервер
+  version: "1.0.0"
+
+paths:
+  /search/contacts:
+    post:
+      summary: Search contacts
+      operationId: findContacts
+      parameters:
+        - $ref: '#/components/parameters/Mode'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/Anchor'
+      requestBody:
+        $ref: '#/components/requestBodies/Filter'
+      responses:
+        200:
+          description: A list of found contacts
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contact'
+        400:
+          $ref: '#/components/responses/ErrorData'
+  /search/contracts:
+    post:
+      summary: Search contracts
+      operationId: findContracts
+      parameters:
+        - $ref: '#/components/parameters/Mode'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/Anchor'
+      requestBody:
+        $ref: '#/components/requestBodies/Filter'
+      responses:
+        200:
+          description: A list of found contracts
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contract'
+        400:
+          $ref: '#/components/responses/ErrorData'
+  /search/modules:
+    post:
+      summary: Search modules
+      operationId: findModules
+      parameters:
+        - $ref: '#/components/parameters/Mode'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/Anchor'
+      requestBody:
+        $ref: '#/components/requestBodies/Filter'
+      responses:
+        200:
+          description: A list of found modules
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Module'
+        400:
+          $ref: '#/components/responses/ErrorData'
+  /search/reports:
+    post:
+      summary: Search reports
+      operationId: findReports
+      parameters:
+        - $ref: '#/components/parameters/Mode'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/Anchor'
+      requestBody:
+        $ref: '#/components/requestBodies/Filter'
+      responses:
+        200:
+          description: A list of found reports
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Report'
+        400:
+          $ref: '#/components/responses/ErrorData'
+  /reports:
+    post:
+      summary: Generate a new report
+      operationId: generateReport
+      requestBody:
+        description: Reports's data
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/ReportData'
+      responses:
+        200:
+          description: Information about execution status of the report
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Report'
+        400:
+          $ref: '#/components/responses/ErrorData'
+  /report-data-template:
+    get:
+      summary: Return report data template
+      operationId: readReportDataTemplate
+      parameters:
+        - in: query
+          name: contractId
+          description: A contract ID
+          required: true
+          schema:
+            type: string
+          example: '123'
+        - in: query
+          name: finishDate
+          description: A finish date
+          schema:
+            type: string
+          example: "'2021-12-31'T'23:59:59'"
+      responses:
+        200:
+          description: A report data template
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ReportDataTemplate'
+        400:
+          $ref: '#/components/responses/ErrorData'
+        404:
+          $ref: '#/components/responses/ErrorData'
+  /reports/{id}/file:
+    get:
+      summary: Download a report file
+      operationId: downloadReportFile
+      parameters:
+        - in: path
+          name: id
+          description: An report's ID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: A downloaded file
+          $ref: "#/components/responses/File"
+        400:
+          $ref: "#/components/responses/ErrorData"
+        404:
+          $ref: "#/components/responses/ErrorData"
+components:
+  parameters:
+    Mode:
+      in: query
+      name: mode
+      description: A mode for getting a page.
+      schema:
+        type: string
+        enum:
+          - first
+          - last
+          - next
+          - prev
+          - self
+    Size:
+      in: query
+      name: size
+      description: A count of items per page.
+      schema:
+        type: integer
+    SortBy:
+      in: query
+      name: sortBy
+      description: A set of column's names by which data is sorting.
+      schema:
+        type: array
+        items:
+          type: string
+          pattern: ^[a-zA-Z_][a-zA-Z0-9_]+(:D)?$
+    Anchor:
+      in: query
+      name: anchor
+      description: An encoded string that is an key describes base row for getting the next or prev pages of data.
+      schema:
+        type: string
+
+  requestBodies:
+    Filter:
+      description: An entity's filter.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Filter"
+
+  responses:
+    File:
+      description: A downloaded file
+      content:
+        "*/*":
+          schema:
+            type: string
+            format: binary
+    ErrorData:
+      description: An error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorData"
+
+  schemas:
+    Contact:
+      type: object
+      properties:
+        _oid:
+          type: string
+        contactId:
+          type: string
+        fullName:
+          type: string
+        contractId:
+          type: string
+      required:
+        - _oid
+        - fullName
+        - contractId
+    Contract:
+      type: object
+      properties:
+        _oid:
+          type: string
+        contractId:
+          type: string
+        name:
+          type: string
+        startDate:
+          type: string
+        finishDate:
+          type: string
+      required:
+        - _oid
+        - contractId
+        - name
+        - startDate
+    Module:
+      type: object
+      properties:
+        _oid:
+          type: string
+        moduleId:
+          type: string
+        name:
+          type: string
+        disabled:
+          type: boolean
+      required:
+        - _oid
+        - moduleId
+        - name
+    Report:
+        type: object
+        properties:
+          _oid:
+            type: string
+          name:
+            type: string
+          status:
+            type: string
+            enum: [Generating , Finished , Error]
+          startDate:
+            type: string
+          finishDate:
+            type: string
+          downloadLink:
+            type: string
+        required:
+          - _oid
+          - name
+          - status
+          - startDate
+    ReportDataTemplate:
+      type: object
+      properties:
+        reportName:
+          type: string
+        startDate:
+          type: string
+        finishDate:
+          type: string
+        startPreamble:
+          type: string
+        finishPreamble:
+          type: string
+        recipient:
+          type: string
+        services:
+          type: string
+        additionalInformation:
+          type: string
+        customerSignerId:
+          type: string
+        executorSignerId:
+          type: string
+        modules:
+          type: array
+          items:
+            type: string
+      required:
+        - startDate
+    ReportData:
+      type: object
+      properties:
+        contractId:
+          type: string
+        reportName:
+          type: string
+        startDate:
+          type: string
+        finishDate:
+          type: string
+        startPreamble:
+          type: string
+        finishPreamble:
+          type: string
+        recipient:
+          type: string
+        services:
+          type: string
+        additionalInformation:
+          type: string
+        customerSignerId:
+          type: string
+        executorSignerId:
+          type: string
+        modules:
+          type: array
+          items:
+            type: string
+      required:
+        - contractId
+        - startDate
+        - modules
+    Filter:
+      oneOf:
+        - type: object
+          properties:
+            field:
+              type: string
+            cond:
+              type: string
+            value:
+              type: string
+          required:
+            - field
+            - cond
+            - value
+        - type: object
+          properties:
+            not:
+              $ref: "#/components/schemas/Filter"
+          required:
+            - not
+        - type: object
+          properties:
+            and:
+              type: array
+              items:
+                $ref: "#/components/schemas/Filter"
+              minItems: 2
+          required:
+            - and
+        - type: object
+          properties:
+            or:
+              type: array
+              items:
+                $ref: "#/components/schemas/Filter"
+              minItems: 2
+          required:
+            - or
+    ErrorData:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
