@@ -1,2 +1,2 @@
-// export { Home, HomeProps } from './Home';
+export { ProjectPage } from './ProjectPage';
 // export { HomeReducer, PageState } from './Home.actions';
