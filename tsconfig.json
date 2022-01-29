@@ -2,7 +2,7 @@
   "compilerOptions": {
     "jsx": "react",
     "allowJs": true,
-    "module": "commonjs",
+    "module": "CommonJS",
     "skipLibCheck": true,
     "esModuleInterop": true,
     "noImplicitAny": true,
@@ -14,7 +14,9 @@
     "target": "ES6",
     "paths": {
       "*": ["node_modules/*"]
-    }
+    },
+    "strict": true,
+    "typeRoots": ["src/typings"]
   },
   "include": ["src/**/*"]
 }
