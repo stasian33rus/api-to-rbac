@@ -1,2 +1,1 @@
-export { ProjectPage } from './ProjectPage';
-// export { HomeReducer, PageState } from './Home.actions';
+export { ProjectPage } from "./ProjectPage";

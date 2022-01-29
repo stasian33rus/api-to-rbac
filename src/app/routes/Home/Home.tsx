@@ -1,116 +1,94 @@
-// /* eslint-disable @typescript-eslint/ban-types */
-// import React from 'react';
+import React, { FunctionComponent } from "react";
+import styled from "styled-components";
+import { Page } from "../../components/Layout";
+import { Card } from "../../components/Card";
+import { GlobalContext } from "../../../features/render/globalContext";
+import { isProjectFile } from "../../../features/render/typeGuards";
+import { ProjectLoader } from "./ProjectLoader/ProjectLoader";
+import { Line } from "../../../app/components/Line";
 
-// export type HomeProps = StateProps & DispatchProps;
+export const Home: FunctionComponent = (props) => {
+  const { ...rest } = props;
+  return (
+    <GlobalContext.Consumer>
+      {({
+        selectedProject,
+        recentProjects,
+        setSelectedProject = (proj) => {
+          throw new Error(
+            `Can't set ${proj.name}, becose setsetSelectedProject is not defined`
+          );
+        },
+      }) =>
+        selectedProject.name === "unset" && (
+          <Page {...rest}>
+            <Header>
+              <Card
+                title="Create a new project"
+                text="Will be created new empty project file"
+                onClick={() => {
+                  window.ipcApi.createProject().then((createdFile) => {
+                    if (isProjectFile(createdFile)) {
+                      setSelectedProject(createdFile);
+                    }
+                  });
+                }}
+              />
+              <ProjectLoader setSelectedProject={setSelectedProject} />
+            </Header>
+            <Line />
+            {recentProjects !== undefined && (
+              <>
+                <RecentTitle>RecentProjects</RecentTitle>
+                <RecentProjects>
+                  {recentProjects.map((p, i) => (
+                    <Card
+                      key={p.name + i}
+                      title={p.name}
+                      text={createPathText(
+                        p.path,
+                        (p.name + ".project").length
+                      )}
+                      onClick={() => setSelectedProject(p)}
+                    />
+                  ))}
+                </RecentProjects>
+              </>
+            )}
+          </Page>
+        )
+      }
+    </GlobalContext.Consumer>
+  );
+};
 
-// interface StateProps {
-//     json?: Record<string, unknown>;
-// }
+export const createPathText = (
+  path: string,
+  projectNameLength: number
+): string =>
+  path.substring(0, 15) +
+  "..." +
+  path.substring(path.length, path.length - projectNameLength - 1);
 
-// interface DispatchProps {
-//     onUploadFile?: () => void;
-// }
+const Header = styled.header`
+  display: flex;
+  justify-content: space-evenly;
+  margin-bottom: 1rem;
 
-// export function Home(props: HomeProps): React.ReactElement {
-//     const [file, setFile] = React.useState<Record<string, undefined>>();
-//     const [users, setUsers] = React.useState<string[]>([]);
-//     const [addingUserName, setAddingUserName] = React.useState<string>();
-//     const reader = new FileReader();
-//     const methods = getMethods(file);
+  & > * {
+    width: 280px;
+  }
+`;
 
-//     const userFields = [...users];
+const RecentTitle = styled.span`
+  font-family: Roboto;
+  font-size: 32px;
+  font-weight: 600;
+`;
 
-//     return (
-//         <div className="home">
-//             <header></header>
-//             <section>
-//                 <form>
-//                     <input
-//                         type="file"
-//                         className="home__input-file"
-//                         onChange={(event) => {
-//                             reader.readAsText(event.target.files[0]);
-//                             reader.onload = (evt) => {
-//                                 const result = evt.target.result;
-//                                 if (typeof result === 'string') {
-//                                     setFile(JSON.parse(result));
-//                                 } else {
-//                                     throw new Error('error happens when try read file as text');
-//                                 }
-//                             };
-//                         }}
-//                         // in next update add support ".yaml" files
-//                         accept=".json"
-//                     />
-//                     <br />
-//                     {file && (
-//                         <React.Fragment>
-//                             <b>Методы-</b>
-//                             <div>
-//                                 {methods.map((method) => (
-//                                     <React.Fragment key={method[0]}>
-//                                         <div key={method[0]}>
-//                                             <br />
-//                                             Api Метод: "{method[0]}". HTTP Методы: "{method[1]}".
-//                                         </div>
-//                                         {users[0] === undefined && <div>Добавьте пользователя</div>}
-//                                         {users[0] !== undefined && (
-//                                             <React.Fragment>
-//                                                 <div>Выберите пользователей</div>
-//                                                 {userFields.map((user, index) => (
-//                                                     <div key={method[0] + index}>
-//                                                         <input id={method[0] + index} type="checkbox" />
-//                                                         <label htmlFor={method[0] + index}>{user}</label>
-//                                                     </div>
-//                                                 ))}
-//                                             </React.Fragment>
-//                                         )}
-//                                     </React.Fragment>
-//                                 ))}
-//                             </div>
-//                         </React.Fragment>
-//                     )}
-//                     <input
-//                         type="text"
-//                         onChange={(event) => {
-//                             setAddingUserName(event.target.value);
-//                         }}
-//                     />
-//                     <button
-//                         type="button"
-//                         disabled={!addingUserName}
-//                         onClick={() => {
-//                             setUsers([...users, addingUserName]);
-//                             setAddingUserName(undefined);
-//                         }}
-//                     >
-//                         Добавить пользователя
-//                     </button>
-//                 </form>
-//             </section>
-//             <footer></footer>
-//         </div>
-//     );
-// }
-
-// function getMethods(json?: Record<string, undefined>): (string | string[])[] {
-//     if (json == undefined) {
-//         return;
-//     }
-
-//     const result: (string | string[])[] = [];
-//     const keys = Object.keys(json);
-//     for (let i = 0; i < keys.length; i++) {
-//         const key = keys[i];
-//         if (!/^\/([a-z,A-Z]+).+/.test(key)) {
-//             if (typeof json[key] !== 'object') {
-//                 continue;
-//             }
-//             getMethods(json[key]);
-//         } else {
-//             const httpMethods = Object.keys(json[key]);
-//             result.push([key, httpMethods.join(',')]);
-//         }
-//     }
-//     return result;
-// }
+const RecentProjects = styled.div`
+  padding-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+  grid-gap: 1em;
+`;
