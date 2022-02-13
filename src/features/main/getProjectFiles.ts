@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { removeExt } from "../removeExt";
 
-export const getFiles = ipcMain.handle("get-project-files", () => {
+export const getProjectFiles = ipcMain.handle("get-project-files", () => {
   const files = fs.readdirSync(path.join(__dirname, "..", "projects"));
   const projects = files.map((name) => {
     const file = fs.readFileSync(

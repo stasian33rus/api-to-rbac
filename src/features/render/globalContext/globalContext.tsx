@@ -1,23 +1,27 @@
 import { createContext } from "react";
 
 export interface Operation {
-  [key: string]: { [key: string]: string };
+  name: string;
+  method: string;
+  path: string;
 }
 
 export interface Permission {
-  [key: string]: Operation[];
+  name: string;
+  operations: Operation[];
 }
 
 export interface Role {
-  [key: string]: Permission[];
+  name: string;
+  permissions: Permission[];
 }
 
 export interface ProjectFile {
   name: string | "unset";
   path: string;
-  operations: Operation[] | undefined[];
-  permissions: Permission[] | undefined[];
-  roles: Role[] | undefined[];
+  operations: Operation[];
+  permissions: Permission[];
+  roles: Role[];
 }
 
 export interface GlobalState {

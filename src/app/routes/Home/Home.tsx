@@ -1,10 +1,11 @@
 import React, { FunctionComponent } from "react";
 import styled from "styled-components";
 import { Page } from "../../components/Layout";
-import { ProjectCard } from "../../components/ProjectCard";
+import { Card } from "../../components/Card";
 import { GlobalContext } from "../../../features/render/globalContext";
 import { isProjectFile } from "../../../features/render/typeGuards";
 import { ProjectLoader } from "./ProjectLoader/ProjectLoader";
+import { Line } from "../../../app/components/Line";
 
 export const Home: FunctionComponent = (props) => {
   const { ...rest } = props;
@@ -22,7 +23,7 @@ export const Home: FunctionComponent = (props) => {
         selectedProject.name === "unset" && (
           <Page {...rest}>
             <Header>
-              <ProjectCard
+              <Card
                 title="Create a new project"
                 text="Will be created new empty project file"
                 onClick={() => {
@@ -35,12 +36,13 @@ export const Home: FunctionComponent = (props) => {
               />
               <ProjectLoader setSelectedProject={setSelectedProject} />
             </Header>
+            <Line />
             {recentProjects !== undefined && (
               <>
-                <Recent>RecentProjects</Recent>
+                <RecentTitle>RecentProjects</RecentTitle>
                 <RecentProjects>
                   {recentProjects.map((p, i) => (
-                    <ProjectCard
+                    <Card
                       key={p.name + i}
                       title={p.name}
                       text={createPathText(
@@ -60,7 +62,10 @@ export const Home: FunctionComponent = (props) => {
   );
 };
 
-export const createPathText = (path: string, projectNameLength: number) =>
+export const createPathText = (
+  path: string,
+  projectNameLength: number
+): string =>
   path.substring(0, 15) +
   "..." +
   path.substring(path.length, path.length - projectNameLength - 1);
@@ -68,17 +73,21 @@ export const createPathText = (path: string, projectNameLength: number) =>
 const Header = styled.header`
   display: flex;
   justify-content: space-evenly;
+  margin-bottom: 1rem;
 
   & > * {
     width: 280px;
   }
 `;
 
-const Recent = styled.h2`
+const RecentTitle = styled.span`
   font-family: Roboto;
+  font-size: 32px;
+  font-weight: 600;
 `;
 
 const RecentProjects = styled.div`
+  padding-top: 1rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
   grid-gap: 1em;

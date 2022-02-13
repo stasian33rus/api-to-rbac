@@ -32,8 +32,9 @@ export const apiParser = (file: string, ext?: Ext): Operation[] | undefined => {
       const methods = Object.keys(parsedFile.paths[path]);
       for (let j = 0; j < methods.length; j++) {
         const method = methods[j];
-        const operationId = parsedFile.paths[path][method].operationId;
-        operations.push({ [operationId]: { [method]: path } });
+
+        const name = parsedFile.paths[path][method].operationId;
+        operations.push({ name, method, path });
       }
     }
     return operations;

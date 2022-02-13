@@ -6,16 +6,29 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import styled from "styled-components";
 import {
   GlobalContext,
   INITIAL_GLOBAL_CONTEXT,
   Operation,
+
+  Role,
 } from "../../../features/render/globalContext";
+import { apiParser } from "../../../features/render/apiParser/apiParser";
+import { FileViewer } from "../../components/FileViewer";
 import { removeExt } from "../../../features/removeExt";
-import { apiParser } from "../../../features/render/ApiParser/apiParser";
+import { Entitie } from "../../components/Editor";
 import { Button } from "../../components/Button";
-import { createPathText } from "../Home/Home";
+import { Line } from "../../components/Line";
+import { Permissions } from "./Permissions";
+import { Roles } from "./Roles";
+import { File } from "./File";
+import {
+  Error,
+  Header,
+  HiddenInputFile,
+  StyledButton,
+  Title,
+} from "./ProjectPage.styled";
 
 interface APIFile {
   name: string;
@@ -29,6 +42,7 @@ export const ProjectPage = (): React.ReactElement => {
     setSelectedProject,
     recentProjects = [],
   } = useContext(GlobalContext);
+
   const initialValues = {
     ...selectedProject,
     name: removeExt(selectedProject.name),
@@ -36,23 +50,66 @@ export const ProjectPage = (): React.ReactElement => {
 
   const inputFileRef: RefObject<HTMLInputElement> = createRef();
 
-  const [projectValues, setProjectValues] = useState(initialValues);
+  const [formValues, setFormValues] = useState(initialValues);
   const [valuesEqual, setValuesEqual] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const [file, setFile] = useState<APIFile | undefined>();
+  const [addedOperations, setAddedOperations] = useState<string[]>([]);
+  const [removedOperations, setRemovedOperations] = useState<string[]>([]);
+  const [addedOperationsText, setAddedOperationsText] = useState<string>();
+  const [removedOperationsText, setRemovedOperationsText] = useState<string>();
+
+  useEffect(() => {
+    if (file == undefined) {
+      return;
+    }
+    const removed = getRemovedOperations(
+      initialValues.operations,
+      file.operations
+    );
+    setRemovedOperations(removed.map((o) => o.name));
+    const added = getAddedOperations(initialValues.operations, file.operations);
+    setAddedOperations(added.map((o) => o.name));
+    let addedText;
+    let removedText;
+    if (added.length !== 0) {
+      addedText = added
+        .map((r) => r.name)
+        .slice(0, 2)
+        .join(" ");
+
+      if (added.length > 2) {
+        addedText += ` and ${added.length - 2} others are`;
+      }
+      setAddedOperationsText(addedText);
+    }
+
+    if (removed.length !== 0) {
+      removedText = removed
+        .map((r) => r.name)
+        .slice(0, 2)
+        .join(" ");
+
+      if (removed.length > 2) {
+        removedText += ` and ${removed.length - 2} others are`;
+      }
+      setRemovedOperationsText(removedText);
+    }
+  }, [file]);
 
   useEffect(() => {
     if (
-      projectValues.name === initialValues.name &&
-      projectValues.path === initialValues.path &&
-      projectValues.permissions == initialValues.permissions &&
-      projectValues.roles == initialValues.roles &&
-      projectValues.operations == initialValues.operations
+      formValues.name === initialValues.name &&
+      formValues.path === initialValues.path &&
+      formValues.permissions == initialValues.permissions &&
+      formValues.roles == initialValues.roles &&
+      formValues.operations == initialValues.operations
     ) {
       setValuesEqual(true);
+      return;
     }
-  }, [projectValues]);
-
+    setValuesEqual(false);
+  }, [formValues]);
   const recentProjectsNames = recentProjects.map((project) => project.name);
 
   return (
@@ -60,11 +117,11 @@ export const ProjectPage = (): React.ReactElement => {
       <Error>{errorMessage}</Error>
       <Header>
         <Title
-          value={projectValues.name}
+          value={formValues.name}
           onChange={(event: ChangeEvent<HTMLInputElement>) => {
             const name = event.target.value || "";
-            setProjectValues({
-              ...projectValues,
+            setFormValues({
+              ...formValues,
               name,
             });
             const err = validateName(
@@ -75,7 +132,7 @@ export const ProjectPage = (): React.ReactElement => {
           }}
         />
         <div>
-          <button
+          <Button
             onClick={() => {
               if (setSelectedProject == undefined) {
                 return;
@@ -84,42 +141,52 @@ export const ProjectPage = (): React.ReactElement => {
                 setSelectedProject(INITIAL_GLOBAL_CONTEXT.selectedProject);
                 return;
               }
-              const name = projectValues.name;
+              const name = formValues.name;
               const oldName = selectedProject.name;
               const content = JSON.stringify({
-                ...projectValues,
+                ...formValues,
                 name,
                 path: selectedProject.path.replace(oldName, name),
               });
-
               window.ipcApi.updateProject(name, oldName, content).then(() => {
                 setSelectedProject(INITIAL_GLOBAL_CONTEXT.selectedProject);
               });
             }}
             disabled={errorMessage !== undefined}
           >
-            Сохранить
-          </button>
+            Save
+          </Button>
+          <Button
+            onClick={() =>
+              setSelectedProject &&
+              setSelectedProject(INITIAL_GLOBAL_CONTEXT.selectedProject)
+            }
+          >
+            Return
+          </Button>
         </div>
       </Header>
+      <Line />
       {file === undefined && (
-        <Button
+        <StyledButton
           outlined
           onClick={() => inputFileRef.current && inputFileRef.current.click()}
         >
           Upload API file
-        </Button>
+        </StyledButton>
       )}
       <HiddenInputFile
         ref={inputFileRef}
         type="file"
         accept=".yaml, .json"
         onChange={(event: ChangeEvent<HTMLInputElement>) => {
-          if (event.target.files == undefined) {
+          if (
+            event.target.files == undefined ||
+            event.target.files[0] == undefined
+          ) {
             return;
           }
           const file = event.target.files[0];
-          console.log(file);
           file
             .text()
             .then((api) => {
@@ -132,7 +199,7 @@ export const ProjectPage = (): React.ReactElement => {
                   path: file.path,
                   operations,
                 });
-                setProjectValues({ ...projectValues, operations });
+                setFormValues({ ...formValues, operations });
               }
             })
             .catch((err) => {
@@ -141,33 +208,90 @@ export const ProjectPage = (): React.ReactElement => {
         }}
       />
       {file !== undefined && (
-        <File>
-          <h3>{file.name}</h3>
-          <FileInfo>
-            <FilePath>
-              {createPathText(file.path, file.name.length)}
-              <Button
-                outlined
-                onClick={() => {
-                  inputFileRef.current && inputFileRef.current.click();
-                }}
-              >
-                Change
-              </Button>
-            </FilePath>
-            <FileOperations>
-              {`${file.operations.length} operations.`}
-              <Button onClick={console.log} outlined>
-                Show all
-              </Button>
-            </FileOperations>
-          </FileInfo>
-        </File>
+        <File
+          name={file.name}
+          path={file.path}
+          operations={file.operations}
+          onChangeFile={() =>
+            inputFileRef.current && inputFileRef.current.click()
+          }
+          addedOperationsText={addedOperationsText}
+          removedOperationsText={removedOperationsText}
+        />
       )}
-      {/* <Permissions>{selectedProject.permissions}</Permissions> */}
-      {/* <Roles>{selectedProject.roles}</Roles> */}
-      {/* <RbacFile>{}</RbacFile> */}
-      {/* <RulesFile>{}</RulesFile> */}
+      <Line />
+      <Permissions
+        addedOperations={addedOperations}
+        removedOperations={removedOperations}
+        onSubmit={(values: {
+          name?: string;
+          entities?: Entitie[];
+          oldName?: string;
+        }) => {
+          const permissions = [
+            ...formValues.permissions.filter((p) => p.name !== values.oldName),
+          ];
+
+          if (values.name !== undefined && values.entities !== undefined) {
+            permissions.push({
+              name: values.name,
+              operations: values.entities.map((e) => {
+                const [method, path] = e.text.split(" : ");
+                return { name: e.name, method, path };
+              }),
+            });
+          }
+
+          setFormValues({
+            ...formValues,
+            permissions,
+          });
+        }}
+        operations={formValues.operations}
+        permissions={formValues.permissions}
+      />
+      <Line />
+      <Roles
+        onSubmit={(values: {
+          name?: string;
+          entities?: Entitie<Operation>[];
+          oldName?: string;
+        }) => {
+          const roles = [
+            ...formValues.roles.filter((p) => p.name !== values.oldName),
+          ];
+
+          if (values.name !== undefined && values.entities !== undefined) {
+            roles.push({
+              name: values.name,
+              permissions: values.entities.map((e) => {
+                return { name: e.name, operations: e.data || [] };
+              }),
+            });
+          }
+
+          setFormValues({
+            ...formValues,
+            roles,
+          });
+        }}
+        permissions={formValues.permissions}
+        roles={formValues.roles}
+      />
+      <Line />
+      <FileViewer title="RBAC - file" text={getRbacValues(formValues.roles)} />
+      <Line />
+      <FileViewer
+        title="Rules - file"
+        text={formValues.roles
+          .map(
+            (p) =>
+              `${p.name}:\n${p.permissions
+                .map((o) => "   - " + o.name + "\n")
+                .join("")}`
+          )
+          .join("")}
+      />
     </>
   );
 };
@@ -185,47 +309,53 @@ const validateName = (
   }
 };
 
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px;
-`;
+const getRbacValues = (roles: Role[]) =>
+  roles
+    .map((r) => {
+      return r.permissions
+        .map((p) => {
+          return p.operations
+            .map((o) => {
+              return `${p.name},${r.name},${o.path},${o.method.toUpperCase()}`;
+            })
+            .join("\n");
+        })
+        .join("\n");
+    })
+    .join("\n");
 
-const Error = styled.div`
-  text-align: center;
-  color: red;
-  font-size: 18px;
-`;
+const getAddedOperations = (
+  projectOperations: Operation[],
+  fileOperations: Operation[]
+): Operation[] => {
+  const addedOperations: Operation[] = [];
+  const parsedOperations: Record<string, Operation> = {};
+  projectOperations.map((o) => {
+    parsedOperations[o.name] = o;
+  });
 
-const Title = styled.input`
-  flex: 1;
-  font-size: 18px;
-  border: none;
-  outline: none;
-`;
+  fileOperations.map((p) => {
+    if (!(p.name in parsedOperations)) {
+      addedOperations.push(p);
+    }
+  });
+  return addedOperations;
+};
 
-const HiddenInputFile = styled.input`
-  display: none;
-`;
+const getRemovedOperations = (
+  projectOperations: Operation[],
+  fileOperations: Operation[]
+): Operation[] => {
+  const removedOperations: Operation[] = [];
+  const parsedOperations: Record<string, Operation> = {};
+  fileOperations.map((o) => {
+    parsedOperations[o.name] = o;
+  });
 
-const File = styled.div`
-  display: flex;
-  gap: 15px;
-`;
-
-const FileInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-`;
-
-const FilePath = styled.div`
-  display: flex;
-  /* align-items: start; */
-`;
-
-const FileOperations = styled.div`
-  display: flex;
-  /* align-items: start; */
-`;
+  projectOperations.map((p) => {
+    if (!(p.name in parsedOperations)) {
+      removedOperations.push(p);
+    }
+  });
+  return removedOperations;
+};

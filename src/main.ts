@@ -2,9 +2,8 @@ import { app, BrowserWindow, Menu } from "electron";
 import * as path from "path";
 import {
   createFile,
-  getFiles,
+  getProjectFiles,
   createFilesFolder,
-  // uploadFile,
   updateFile,
 } from "./features/main";
 
@@ -83,7 +82,6 @@ app.on("activate", () => {
 // code. You can also put them in separate files and import them here.
 
 createFile;
-getFiles;
+getProjectFiles;
 createFilesFolder;
-// uploadFile(mainWindow);
 updateFile;

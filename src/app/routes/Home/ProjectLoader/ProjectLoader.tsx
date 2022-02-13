@@ -1,6 +1,6 @@
 import React, { ChangeEvent, createRef, FunctionComponent, Ref } from "react";
 import styled from "styled-components";
-import { ProjectCard } from "../../../../app/components/ProjectCard";
+import { Card } from "../../../components/Card";
 import { ProjectFile } from "../../../../features/render/globalContext";
 import { isProjectFile } from "../../../../features/render/typeGuards";
 
@@ -13,7 +13,7 @@ export const ProjectLoader: FunctionComponent<ProjectLoaderProps> = (props) => {
   const inputRef: Ref<HTMLInputElement> = createRef();
   return (
     <Label>
-      <StyledProjectCard
+      <StyledCard
         title="Open a project"
         text="Choose a project file (.project)"
         onClick={() => inputRef.current && inputRef.current.click()}
@@ -28,9 +28,7 @@ export const ProjectLoader: FunctionComponent<ProjectLoaderProps> = (props) => {
           }
           event.target.files[0].text().then((text) => {
             const projectFile = JSON.parse(text);
-            console.log(JSON.parse(text));
             if (isProjectFile(projectFile)) {
-              console.log("asdasdasdasd");
               setSelectedProject(projectFile);
             }
           });
@@ -48,6 +46,6 @@ const Input = styled.input`
   display: none;
 `;
 
-const StyledProjectCard = styled(ProjectCard)`
+const StyledCard = styled(Card)`
   flex: 1;
 `;

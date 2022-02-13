@@ -1,4 +1,4 @@
 export { createFile } from "./createFile";
-export { getFiles } from "./getProjectFiles";
-export { createFilesFolder } from "./createFilesFolder";
+export { getProjectFiles } from "./getProjectFiles";
+export { createFilesFolder } from "./createProjectsFolder";
 export { updateFile } from "./updateFile";

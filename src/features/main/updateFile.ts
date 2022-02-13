@@ -14,8 +14,7 @@ export const updateFile = ipcMain.handle(
 
         resolve("fileCreated");
       } catch (error) {
-        console.log(`cannot create file with name ${name}.`, error);
-        reject(`cannot create file with name ${name}.`);
+        reject(`cannot create file with name ${name}. Error: ${error}`);
       }
     })
       .then(() => {

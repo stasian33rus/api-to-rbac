@@ -14,6 +14,14 @@ const Root = styled.div`
   height: 100%;
   padding: 0;
   margin: 0;
+  font-family: sans-serif;
+
+  body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+  }
 `;
 
 export const App: FunctionComponent = () => {
